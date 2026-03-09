@@ -141,18 +141,24 @@ async def create(
     return agent_loop, channel, bus
 
 
+async def _dispatch_outbound(bus: MessageBus, channel: GitHubChannel) -> None:
+    """Consume outbound messages from the bus and deliver them to the channel."""
+    while True:
+        try:
+            msg = await asyncio.wait_for(bus.consume_outbound(), timeout=1.0)
+        except asyncio.TimeoutError:
+            continue
+        await channel.send(msg)
+
+
 async def run() -> None:
     """Create the stack and run one GitHub Actions turn."""
     agent_loop, channel, bus = await create()
     loop_task = asyncio.create_task(agent_loop.run())
+    dispatch_task = asyncio.create_task(_dispatch_outbound(bus, channel))
     try:
         await channel.start(bus)
     finally:
         loop_task.cancel()
-        try:
-            await asyncio.wait_for(
-                asyncio.gather(loop_task, return_exceptions=True),
-                timeout=5.0,
-            )
-        except asyncio.TimeoutError:
-            pass
+        dispatch_task.cancel()
+        await asyncio.gather(loop_task, dispatch_task, return_exceptions=True)
