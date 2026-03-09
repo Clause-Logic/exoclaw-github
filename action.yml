@@ -1,0 +1,84 @@
+name: exoclaw
+description: Run the exoclaw AI agent in response to GitHub events
+author: Clause-Logic
+
+inputs:
+  model:
+    description: LLM model string (e.g. claude-sonnet-4-5, gpt-4o)
+    required: false
+    default: claude-sonnet-4-5
+  trigger:
+    description: Word that must appear in comments to trigger the bot. Empty string = respond to all.
+    required: false
+    default: "@exoclaw"
+  respond_to_issues_opened:
+    description: Respond when an issue is opened
+    required: false
+    default: "true"
+  respond_to_prs_opened:
+    description: Respond when a PR is opened
+    required: false
+    default: "false"
+  python_version:
+    description: Python version to use
+    required: false
+    default: "3.11"
+  package_version:
+    description: exoclaw-github version to install (default latest)
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Restore bot state
+      shell: bash
+      run: |
+        git clone --branch bot-state --depth 1 \
+          https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git \
+          ~/.nanobot/workspace 2>/dev/null || {
+            mkdir -p ~/.nanobot/workspace
+            cd ~/.nanobot/workspace
+            git init
+            git remote add origin https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+            git checkout --orphan bot-state
+          }
+
+    - name: Copy soul file
+      shell: bash
+      run: |
+        if [ -f .bot/soul.md ]; then
+          cp .bot/soul.md ~/.nanobot/workspace/soul.md
+        fi
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python_version }}
+
+    - name: Install exoclaw-github
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.package_version }}" ]; then
+          pip install "exoclaw-github==${{ inputs.package_version }}"
+        else
+          pip install exoclaw-github
+        fi
+
+    - name: Run agent
+      shell: bash
+      run: python -m exoclaw_github
+      env:
+        EXOCLAW_MODEL: ${{ inputs.model }}
+        EXOCLAW_TRIGGER: ${{ inputs.trigger }}
+
+    - name: Save bot state
+      if: always()
+      shell: bash
+      run: |
+        cd ~/.nanobot/workspace
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git config user.name "github-actions[bot]"
+        git add -A
+        git diff --staged --quiet || git commit -m "chore: update bot state [skip ci]"
+        git push origin bot-state
