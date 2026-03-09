@@ -26,6 +26,10 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+    # Serialize runs per issue/PR so concurrent comments don't race on bot-state.
+    concurrency:
+      group: ${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+      cancel-in-progress: false
     # Only run for contributors — prevents strangers from triggering the bot.
     # Adjust the list to taste: OWNER, MEMBER, COLLABORATOR, CONTRIBUTOR, FIRST_TIME_CONTRIBUTOR
     if: |
@@ -48,7 +52,7 @@ jobs:
           # Default: github/gpt-4.1-mini via GITHUB_TOKEN — no secrets needed.
           # model: claude-sonnet-4-5   # uncomment + add ANTHROPIC_API_KEY secret to use Anthropic
           # model: gpt-4o              # uncomment + add OPENAI_API_KEY secret to use OpenAI
-          trigger: "@exoclaw"
+          trigger: "@exoclawbot"
           # respond_to_prs_opened: "true"
           tools: >-
             github_pr_diff,

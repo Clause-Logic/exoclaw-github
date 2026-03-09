@@ -13,7 +13,7 @@ inputs:
   trigger:
     description: Word that must appear in comments to trigger the bot. Empty string = respond to all.
     required: false
-    default: "@exoclaw"
+    default: "@exoclawbot"
   respond_to_issues_opened:
     description: Respond when an issue is opened
     required: false
