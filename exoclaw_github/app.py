@@ -36,6 +36,18 @@ def _env(key: str, default: str = "") -> str:
     return os.environ.get(key, default)
 
 
+_GITHUB_TOOLS: dict[str, Any] = {
+    "github_review": GitHubReviewTool,
+    "github_label": GitHubLabelTool,
+    "github_pr_diff": GitHubPRDiffTool,
+    "github_issue": GitHubIssueTool,
+    "github_reaction": GitHubReactionTool,
+    "github_file": GitHubFileTool,
+    "github_checks": GitHubChecksTool,
+    "github_search": GitHubSearchTool,
+}
+
+
 async def create(
     model: str | None = None,
     state_dir: Path | None = None,
@@ -45,6 +57,7 @@ async def create(
     respond_to_prs_opened: bool = False,
     max_tokens: int = 8192,
     max_iterations: int = 40,
+    tools: list[str] | None = None,
 ) -> tuple[AgentLoop, GitHubChannel, MessageBus]:
     """
     Create a fully wired exoclaw stack for GitHub Actions.
@@ -63,6 +76,9 @@ async def create(
         respond_to_prs_opened: Whether to respond when a PR is opened.
         max_tokens: Maximum tokens per LLM response.
         max_iterations: Maximum tool-call iterations per turn.
+        tools: GitHub tool names to enable (e.g. ["github_pr_diff", "github_review"]).
+            Defaults to EXOCLAW_TOOLS env var (comma-separated). Empty = no GitHub tools.
+            Workspace tools (read/write/exec) are always enabled.
     """
     model = model or _env("EXOCLAW_MODEL", "claude-sonnet-4-5")
 
@@ -86,21 +102,25 @@ async def create(
         model=model,
     )
 
-    tools: list[Any] = [
+    # Resolve which GitHub tools to enable
+    if tools is None:
+        env_tools = _env("EXOCLAW_TOOLS")
+        tools = [t.strip() for t in env_tools.split(",") if t.strip()] if env_tools else []
+
+    enabled_tools: list[Any] = [
         ReadFileTool(workspace=repo_dir),
         WriteFileTool(workspace=repo_dir),
         EditFileTool(workspace=repo_dir),
         ListDirTool(workspace=repo_dir),
         ExecTool(working_dir=str(repo_dir)),
-        GitHubReviewTool(),
-        GitHubLabelTool(),
-        GitHubPRDiffTool(),
-        GitHubIssueTool(),
-        GitHubReactionTool(),
-        GitHubFileTool(),
-        GitHubChecksTool(),
-        GitHubSearchTool(),
     ]
+    for tool_name in tools:
+        cls = _GITHUB_TOOLS.get(tool_name)
+        if cls:
+            enabled_tools.append(cls())
+        else:
+            import warnings
+            warnings.warn(f"Unknown tool: {tool_name!r}. Available: {list(_GITHUB_TOOLS)}")
 
     agent_loop = AgentLoop(
         bus=bus,
@@ -109,7 +129,7 @@ async def create(
         model=model,
         max_iterations=max_iterations,
         max_tokens=max_tokens,
-        tools=tools,
+        tools=enabled_tools,
     )
 
     channel = GitHubChannel(

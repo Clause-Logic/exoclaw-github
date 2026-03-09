@@ -38,8 +38,17 @@ jobs:
         uses: Clause-Logic/exoclaw-github@main
         with:
           model: claude-sonnet-4-5
-          # trigger: "@exoclaw"          # default — set to "" to respond to all comments
+          trigger: "@exoclaw"
           # respond_to_prs_opened: "true"
+          tools: >-
+            github_pr_diff,
+            github_file,
+            github_checks,
+            github_search,
+            github_review,
+            github_label,
+            github_reaction
+          # github_issue — uncomment to allow the bot to create/close issues
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}

@@ -23,6 +23,14 @@ inputs:
     description: Python version to use
     required: false
     default: "3.11"
+  tools:
+    description: >
+      Comma-separated list of GitHub tools to enable. Workspace tools (read/write/exec)
+      are always on. Available: github_review, github_label, github_pr_diff, github_issue,
+      github_reaction, github_file, github_checks, github_search.
+      Default: none enabled.
+    required: false
+    default: ""
   package_version:
     description: exoclaw-github version to install (default latest)
     required: false
@@ -71,6 +79,7 @@ runs:
       env:
         EXOCLAW_MODEL: ${{ inputs.model }}
         EXOCLAW_TRIGGER: ${{ inputs.trigger }}
+        EXOCLAW_TOOLS: ${{ inputs.tools }}
 
     - name: Save bot state
       if: always()
