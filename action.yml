@@ -83,6 +83,7 @@ runs:
         EXOCLAW_MODEL: ${{ inputs.model }}
         EXOCLAW_TRIGGER: ${{ inputs.trigger }}
         EXOCLAW_TOOLS: ${{ inputs.tools }}
+        GITHUB_TOKEN: ${{ github.token }}
         GITHUB_API_KEY: ${{ github.token }}
 
     - name: Save bot state
