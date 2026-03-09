@@ -37,6 +37,7 @@ jobs:
       issues: write
       pull-requests: write
       contents: write
+      models: read
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -58,6 +59,6 @@ jobs:
             github_label,
             github_reaction
           # github_issue — uncomment to allow the bot to create/close issues
-        env:
-          # ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # To use Anthropic: uncomment model above + add ANTHROPIC_API_KEY secret, then add:
+          #   env:
+          #     ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
