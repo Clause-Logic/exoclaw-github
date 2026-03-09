@@ -58,7 +58,7 @@ class GitHubChannel:
         respond_to_issues_opened: bool = True,
         respond_to_prs_opened: bool = False,
     ):
-        self._token = token or os.environ.get("GITHUB_TOKEN", "")
+        self._token = token or os.environ.get("GITHUB_TOKEN") or os.environ.get("GITHUB_API_KEY", "")
         self._trigger = trigger
         self._respond_to_issues_opened = respond_to_issues_opened
         self._respond_to_prs_opened = respond_to_prs_opened
@@ -206,7 +206,7 @@ class GitHubChannel:
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
         }
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=30.0) as client:
             resp = await client.post(url, json={"body": content}, headers=headers)
             resp.raise_for_status()
         logger.info("Posted comment to {}/{}", event.repo, event.number)

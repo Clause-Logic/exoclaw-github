@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 from typing import Any
 
+from loguru import logger
+
 from exoclaw.agent.loop import AgentLoop
 from exoclaw.bus.queue import MessageBus
 from exoclaw_conversation.conversation import DefaultConversation
@@ -148,7 +150,10 @@ async def _dispatch_outbound(bus: MessageBus, channel: GitHubChannel) -> None:
             msg = await asyncio.wait_for(bus.consume_outbound(), timeout=1.0)
         except asyncio.TimeoutError:
             continue
-        await channel.send(msg)
+        try:
+            await channel.send(msg)
+        except Exception:
+            logger.exception("Failed to deliver outbound message to channel")
 
 
 async def run() -> None:
