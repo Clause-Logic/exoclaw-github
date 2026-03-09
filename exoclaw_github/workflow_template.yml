@@ -26,6 +26,13 @@ on:
 jobs:
   run:
     runs-on: ubuntu-latest
+    # Only run for contributors — prevents strangers from triggering the bot.
+    # Adjust the list to taste: OWNER, MEMBER, COLLABORATOR, CONTRIBUTOR, FIRST_TIME_CONTRIBUTOR
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.comment.author_association) ||
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.issue.author_association) ||
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR","CONTRIBUTOR"]'), github.event.pull_request.author_association)
     permissions:
       issues: write
       pull-requests: write
