@@ -149,4 +149,10 @@ async def run() -> None:
         await channel.start(bus)
     finally:
         loop_task.cancel()
-        await asyncio.gather(loop_task, return_exceptions=True)
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(loop_task, return_exceptions=True),
+                timeout=5.0,
+            )
+        except asyncio.TimeoutError:
+            pass

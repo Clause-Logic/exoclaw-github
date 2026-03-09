@@ -8,7 +8,8 @@ from exoclaw_github.app import run
 
 def main() -> None:
     asyncio.run(run())
-    sys.exit(0)
+    import os
+    os._exit(0)
 
 
 if __name__ == "__main__":
