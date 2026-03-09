@@ -4,9 +4,12 @@ author: Clause-Logic
 
 inputs:
   model:
-    description: LLM model string (e.g. claude-sonnet-4-5, gpt-4o)
+    description: >
+      LLM model to use. Defaults to github/gpt-4.1-mini which uses your
+      GITHUB_TOKEN — no extra secrets needed. To use Anthropic or OpenAI,
+      set e.g. claude-sonnet-4-5 or gpt-4o and provide the relevant API key secret.
     required: false
-    default: claude-sonnet-4-5
+    default: github/gpt-4.1-mini
   trigger:
     description: Word that must appear in comments to trigger the bot. Empty string = respond to all.
     required: false
@@ -80,6 +83,7 @@ runs:
         EXOCLAW_MODEL: ${{ inputs.model }}
         EXOCLAW_TRIGGER: ${{ inputs.trigger }}
         EXOCLAW_TOOLS: ${{ inputs.tools }}
+        GITHUB_API_KEY: ${{ github.token }}
 
     - name: Save bot state
       if: always()
