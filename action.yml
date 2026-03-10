@@ -39,6 +39,10 @@ inputs:
     required: false
     default: ""
 
+branding:
+  icon: zap
+  color: purple
+
 runs:
   using: composite
   steps:
