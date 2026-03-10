@@ -1,4 +1,4 @@
-name: exoclaw
+name: exoclaw agent
 description: Run the exoclaw AI agent in response to GitHub events
 author: Clause-Logic
 
